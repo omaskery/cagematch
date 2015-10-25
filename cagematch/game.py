@@ -1,5 +1,6 @@
 """this file implements the top level game object that pulls together the rest of the code into one game"""
 from .ticker import Ticker
+from .entities import EntityContainer, Player
 import pygame
 
 
@@ -8,20 +9,39 @@ class Game(object):
 
     def __init__(self, resolution, fullscreen):
         """constructor that initialises the game"""
+        # store parameters
         self._resolution = resolution
         self._fullscreen = fullscreen
+        # flag for whether game is still running (see run())
         self._running = False
 
+        # all game entities (players, enemies, ...)
+        self._entities = EntityContainer()
+        self._entities.add(Player(self._resolution))
+
+        # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
         desired_lps = 100.0
         seconds_between_stats = 10.0
-
+        # initialise the tickers
         self._render_ticker = Ticker.from_frequency(desired_fps)
         self._logic_ticker = Ticker.from_frequency(desired_lps)
         self._stats_ticker = Ticker.from_seconds(seconds_between_stats)
 
+        # delta time between simulation steps
+        self._dt = 1.0 / desired_fps
+
+        # the colour the screen clears to before each frame is rendered
+        self._clear_colour = 0, 0, 0
+        # the position of the game camera
+        self._camera_pos = 0, 0
+
+        # initialise pygame and create the window
         pygame.init()
-        self._screen = pygame.display.set_mode(self._resolution)
+        flags = 0
+        if self._fullscreen:
+            flags = flags or pygame.FULLSCREEN
+        self._screen = pygame.display.set_mode(self._resolution, flags)
 
     def __del__(self):
         """destructor that cleans up pygame when the game shuts down"""
@@ -57,11 +77,14 @@ class Game(object):
 
     def _run_simulation(self):
         """updates the game's simulation/model"""
-        pass
+        self._entities.think(self._dt)
 
     def _render_graphics(self):
         """renders a new frame to draw to the screen"""
-        self._screen.fill((255, 0, 0))
+        self._screen.fill(self._clear_colour)
+        # create a rectangle to describe the visible game window ("what the camera can see")
+        bounds = pygame.Rect(self._camera_pos, self._resolution)
+        self._entities.render(bounds, self._screen)
         pygame.display.flip()
 
     def _display_stats(self):
@@ -72,5 +95,4 @@ class Game(object):
             fps, lps
         )
         print("stats: {}".format(stats_string))
-        pygame.display.set_caption("cagematch ({})".format(stats_string))
-
+        pygame.display.set_caption("Cage Match ({})".format(stats_string))
