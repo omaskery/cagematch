@@ -1,6 +1,6 @@
 """this file implements the top level game object that pulls together the rest of the code into one game"""
 from .ticker import Ticker
-from .entities import EntityContainer, Player
+from .entities import EntityContainer, Player, Projectile
 import pygame
 
 
@@ -17,7 +17,7 @@ class Game(object):
 
         # all game entities (players, enemies, ...)
         self._entities = EntityContainer()
-        self._entities.add(Player(self._resolution))
+        self._entities.add(Player(self._resolution, self._player_shoot))
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
@@ -42,6 +42,12 @@ class Game(object):
         if self._fullscreen:
             flags = flags or pygame.FULLSCREEN
         self._screen = pygame.display.set_mode(self._resolution, flags)
+
+    def _player_shoot(self, bullet_origin):
+        speed = 4
+        self._entities.add(
+            Projectile(bullet_origin, (0, -speed))
+        )
 
     def __del__(self):
         """destructor that cleans up pygame when the game shuts down"""
