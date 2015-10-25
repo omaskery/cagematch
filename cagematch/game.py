@@ -15,12 +15,27 @@ class Game(object):
         # flag for whether game is still running (see run())
         self._running = False
 
+        # difficulty variables
+        self._starting_speed = 1
+        self._max_speed = 8
+        self._advance_rate = 2
+        self._rows = 4
+        self._columns = 6
+        self._xspacing = 96
+        self._yspacing = self._xspacing
+
         # all game entities (players, enemies, ...)
         self._entities = EntityContainer()
-        self._enemies = EnemyController(self._resolution, 1, 13)
+        # all bullets
+        self._bullets = EntityContainer(die_on_empty=False)
+        # all enemies
+        self._start_level()
+        # add player to game
         self._entities.add(Player(self._resolution, self._player_shoot))
+        # add enemy container to game
         self._entities.add(self._enemies)
-        self._enemies.populate(4, 6, 96, 96)
+        # add bullet container to game
+        self._entities.add(self._bullets)
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
@@ -66,6 +81,14 @@ class Game(object):
             # if it's time to print statistics, do that
             self._stats_ticker.tick(self._display_stats)
 
+    def _start_level(self):
+        """sets up a level of the game"""
+        self._enemies = EnemyController(self._resolution, self._starting_speed, self._max_speed, self._advance_rate)
+        self._enemies.populate(self._rows, self._columns, self._xspacing, self._yspacing)
+        self._enemies.set_death_callback(self._next_level)
+        self._starting_speed += 0.5
+        self._entities.add(self._enemies)
+
     def _handle_events(self):
         """handles all OS events"""
         # handle every event the OS wants us to look at
@@ -80,7 +103,13 @@ class Game(object):
 
     def _run_simulation(self):
         """updates the game's simulation/model"""
+        # update all entities
         self._entities.think(self._dt)
+        # see if any bullets hit any enemies
+        self._bullets.check_collisions(
+            self._enemies,
+            Game._enemy_shot_by_bullet
+        )
 
     def _render_graphics(self):
         """renders a new frame to draw to the screen"""
@@ -105,5 +134,17 @@ class Game(object):
         speed = 7
         projectile = Projectile(bullet_origin, (0, -speed))
         projectile.set_death_callback(death_callback)
-        self._entities.add(projectile)
+        self._bullets.add(projectile)
+
+    def _next_level(self, enemy_controller):
+        """callback called when all enemies are dead"""
+        _ = enemy_controller
+        print("next level")
+        self._start_level()
+
+    @staticmethod
+    def _enemy_shot_by_bullet(bullet, enemy):
+        """callback for an enemy being shot by a bullet"""
+        bullet.die()
+        enemy.die()
 

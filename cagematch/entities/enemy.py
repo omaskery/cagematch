@@ -38,26 +38,28 @@ class EnemyController(EntityContainer):
         """override 'add entity to container' behaviour to set their movement/speed to match all enemies"""
         super().add(entity)
         entity.set_movement(self._current_direction, self._current_speed)
+        entity.set_death_callback(self._enemy_died)
 
-    def think(self, *args):
+    def think(self, dt):
         """simulation event"""
         # update all contained entities
-        super().think(args)
-        # decide whether the enemies need to change direction
-        turn_around = False
-        if self._current_direction == Enemy.LEFT:
-            left_most = self._find_leftmost()
-            if left_most < self._bounds.left:
-                turn_around = True
-        elif self._current_direction == Enemy.RIGHT:
-            right_most = self._find_rightmost()
-            if right_most > self._bounds.right:
-                turn_around = True
-        else:
-            print("invalid direction: {}".format(self._current_direction))
-        # if so, change direction
-        if turn_around:
-            self._change_direction()
+        super().think(dt)
+        if len(self._entities) > 0:
+            # decide whether the enemies need to change direction
+            turn_around = False
+            if self._current_direction == Enemy.LEFT:
+                left_most = self._find_leftmost()
+                if left_most < self._bounds.left:
+                    turn_around = True
+            elif self._current_direction == Enemy.RIGHT:
+                right_most = self._find_rightmost()
+                if right_most > self._bounds.right:
+                    turn_around = True
+            else:
+                print("invalid direction: {}".format(self._current_direction))
+            # if so, change direction
+            if turn_around:
+                self._change_direction()
 
     def _find_leftmost(self):
         """identifies which enemy is the furthest left, and returns the x position of their leading edge"""
@@ -92,6 +94,14 @@ class EnemyController(EntityContainer):
         for enemy in self._entities:
             enemy.set_movement(self._current_direction, self._current_speed)
             enemy.advance(self._advance_speed)
+
+    def _enemy_died(self, enemy):
+        """callback when an enemy dies, used to make the last enemy speed up"""
+        _ = enemy
+        if len(self._entities) == 2:
+            print("last enemy!")
+            self._current_speed *= 2
+            self._entities[0].set_movement(self._current_direction, self._current_speed)
 
 
 class Enemy(Entity):

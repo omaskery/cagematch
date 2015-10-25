@@ -26,7 +26,7 @@ class Entity(object):
         """causes this entity to update it's simulation/model state"""
         pass
 
-    def _die(self):
+    def die(self):
         """sets this entity's alive flag to false"""
         if self._alive:
             self._death_callback(self)
@@ -36,22 +36,28 @@ class Entity(object):
 class EntityContainer(Entity):
     """a container for entities, which can also be treated as an entity (composite pattern)"""
 
-    def __init__(self):
+    def __init__(self, die_on_empty=True):
         """constructor"""
         super().__init__()
         self._entities = []
+        self._die_on_empty=die_on_empty
 
     def is_alive(self):
-        """an entity container is alive as long as it contains a living entity inside it"""
-        return any([entity.is_alive() for entity in self._entities])
+        """containers live forever unless die_on_empty is set, in which case when all entities are dead they die"""
+        result = True
+        if self._die_on_empty and self._alive:
+            result = any([entity.is_alive() for entity in self._entities])
+            if not result:
+                self.die()
+        return result
 
-    def render(self, *args):
+    def render(self, bounds, dest):
         """renders all entities within the container"""
-        list(map(lambda entity: entity.render(*args), self._entities))
+        list(map(lambda entity: entity.render(bounds, dest), self._entities))
 
-    def think(self, *args):
+    def think(self, dt):
         """updates the simulation/model state of all entities inside the container"""
-        self._entities = list(filter(lambda entity: EntityContainer._update_entity(entity, args), self._entities))
+        self._entities = list(filter(lambda entity: EntityContainer._update_entity(entity, dt), self._entities))
 
     def add(self, entity):
         """adds an entity to the collection"""
@@ -61,9 +67,22 @@ class EntityContainer(Entity):
         """removes an entity from the collection"""
         self._entities.remove(entity)
 
+    def check_collisions(self, other_container, callback):
+        """checks every entity for collision with every entity in a given container,
+        calling the given callback with the each entity as the arguments - note that
+        this function assumes both containers only have entities with a valid _rect
+        property"""
+        my_ents = self._entities
+        other_ents = other_container._entities
+        for me in my_ents:
+            for oe in other_ents:
+                if me._rect.colliderect(oe._rect):
+                    callback(me, oe)
+                    break
+
     @staticmethod
-    def _update_entity(entity, *args):
+    def _update_entity(entity, dt):
         """updates a single entity (if it is alive) and returns whether it is still alive afterwards"""
         if entity.is_alive():
-            entity.think(*args)
+            entity.think(dt)
         return entity.is_alive()

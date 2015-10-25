@@ -26,8 +26,8 @@ class Projectile(Entity):
     def render(self, bounds, dest):
         """render event"""
         # if we leave the visible screen, flag ourselves as dead
-        if not bounds.contains(self._rect):
-            self._die()
+        if not bounds.colliderect(self._rect):
+            self.die()
         # otherwise draw ourself
         else:
             pygame.draw.rect(dest, (255, 255, 0), self._rect)
