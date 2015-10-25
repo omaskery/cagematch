@@ -7,6 +7,12 @@ class Entity(object):
     def __init__(self):
         """constructor for an entity"""
         self._alive = True
+        # callback can be set to alert someone to an entity dying
+        self._death_callback = lambda this: None
+
+    def set_death_callback(self, callback):
+        """sets the death callback so you can be alerted of this entity's death"""
+        self._death_callback = callback
 
     def is_alive(self):
         """returns whether this entity is still alive"""
@@ -22,7 +28,9 @@ class Entity(object):
 
     def _die(self):
         """sets this entity's alive flag to false"""
-        self._alive = False
+        if self._alive:
+            self._death_callback(self)
+            self._alive = False
 
 
 class EntityContainer(Entity):
