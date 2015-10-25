@@ -1,6 +1,6 @@
 """this file implements the top level game object that pulls together the rest of the code into one game"""
 from .ticker import Ticker
-from .entities import EntityContainer, Player, Projectile
+from .entities import EntityContainer, Player, Projectile, Enemy
 import pygame
 
 
@@ -18,6 +18,7 @@ class Game(object):
         # all game entities (players, enemies, ...)
         self._entities = EntityContainer()
         self._entities.add(Player(self._resolution, self._player_shoot))
+        self._entities.add(Enemy((400, 100)))
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
@@ -42,14 +43,6 @@ class Game(object):
         if self._fullscreen:
             flags = flags or pygame.FULLSCREEN
         self._screen = pygame.display.set_mode(self._resolution, flags)
-
-    def _player_shoot(self, bullet_origin, death_callback):
-        speed = 4
-        projectile = Projectile(bullet_origin, (0, -speed))
-        projectile.set_death_callback(death_callback)
-        self._entities.add(
-            projectile
-        )
 
     def __del__(self):
         """destructor that cleans up pygame when the game shuts down"""
@@ -104,3 +97,11 @@ class Game(object):
         )
         print("stats: {}".format(stats_string))
         pygame.display.set_caption("Cage Match ({})".format(stats_string))
+
+    def _player_shoot(self, bullet_origin, death_callback):
+        """callback passed to the Player to enable them to fire projectiles"""
+        speed = 4
+        projectile = Projectile(bullet_origin, (0, -speed))
+        projectile.set_death_callback(death_callback)
+        self._entities.add(projectile)
+
