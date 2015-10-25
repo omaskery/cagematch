@@ -26,16 +26,20 @@ class Game(object):
 
         # all game entities (players, enemies, ...)
         self._entities = EntityContainer()
-        # all bullets
-        self._bullets = EntityContainer(die_on_empty=False)
+        # player bullets
+        self._player_bullets = EntityContainer(die_on_empty=False)
+        # enemy bullets
+        self._enemy_bullets = EntityContainer(die_on_empty=False)
         # all enemies
         self._start_level()
         # add player to game
-        self._entities.add(Player(self._resolution, self._player_shoot))
+        self._player = Player(self._resolution, self._player_shoot)
+        self._entities.add(self._player)
         # add enemy container to game
         self._entities.add(self._enemies)
         # add bullet container to game
-        self._entities.add(self._bullets)
+        self._entities.add(self._player_bullets)
+        self._entities.add(self._enemy_bullets)
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
@@ -83,7 +87,13 @@ class Game(object):
 
     def _start_level(self):
         """sets up a level of the game"""
-        self._enemies = EnemyController(self._resolution, self._starting_speed, self._max_speed, self._advance_rate)
+        self._enemies = EnemyController(
+            self._resolution,
+            self._starting_speed,
+            self._max_speed,
+            self._enemy_shoot,
+            advance_speed=self._advance_rate
+        )
         self._enemies.populate(self._rows, self._columns, self._xspacing, self._yspacing)
         self._enemies.set_death_callback(self._next_level)
         self._starting_speed += 0.5
@@ -105,10 +115,15 @@ class Game(object):
         """updates the game's simulation/model"""
         # update all entities
         self._entities.think(self._dt)
-        # see if any bullets hit any enemies
-        self._bullets.check_collisions(
+        # see if any player bullets hit any enemies
+        self._player_bullets.check_collisions(
             self._enemies,
             Game._enemy_shot_by_bullet
+        )
+        # see if any enemy bullets hit the player
+        self._enemy_bullets.check_collision_single(
+            self._player,
+            Game._player_shot_by_bullet
         )
 
     def _render_graphics(self):
@@ -132,9 +147,16 @@ class Game(object):
     def _player_shoot(self, bullet_origin, death_callback):
         """callback passed to the Player to enable them to fire projectiles"""
         speed = 7
-        projectile = Projectile(bullet_origin, (0, -speed))
+        projectile = Projectile(bullet_origin, (0, -speed), (255, 255, 0))
         projectile.set_death_callback(death_callback)
-        self._bullets.add(projectile)
+        self._player_bullets.add(projectile)
+
+    def _enemy_shoot(self, bullet_origin, death_callback):
+        """callback passed to the Player to enable them to fire projectiles"""
+        speed = 3
+        projectile = Projectile(bullet_origin, (0, speed), (255, 255, 255))
+        projectile.set_death_callback(death_callback)
+        self._enemy_bullets.add(projectile)
 
     def _next_level(self, enemy_controller):
         """callback called when all enemies are dead"""
@@ -148,3 +170,9 @@ class Game(object):
         bullet.die()
         enemy.die()
 
+    @staticmethod
+    def _player_shot_by_bullet(bullet, player):
+        """callback for an enemy being shot by a bullet"""
+        bullet.die()
+        print("player died!")
+        # TODO: handle player death

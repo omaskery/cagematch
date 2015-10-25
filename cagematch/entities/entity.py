@@ -80,6 +80,17 @@ class EntityContainer(Entity):
                     callback(me, oe)
                     break
 
+    def check_collision_single(self, other_entity, callback):
+        """checks every entity for collision with the given entity, calling the given
+        callback with the each entity as the arguments - note that this function assumes
+        both the entities in the container and the other entity have a valid _rect
+        property"""
+        my_ents = self._entities
+        for me in my_ents:
+            if me._rect.colliderect(other_entity._rect):
+                callback(me, other_entity)
+                break
+
     @staticmethod
     def _update_entity(entity, dt):
         """updates a single entity (if it is alive) and returns whether it is still alive afterwards"""

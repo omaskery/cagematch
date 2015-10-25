@@ -7,7 +7,7 @@ import pygame
 class Projectile(Entity):
     """an entity that is a projectile"""
 
-    def __init__(self, pos, velocity):
+    def __init__(self, pos, velocity, appearance):
         """constructor"""
         super().__init__()
         size = 10, 10
@@ -17,6 +17,8 @@ class Projectile(Entity):
         self._rect.center = pos
         # remember our velocity
         self._vel = velocity
+        # store some appearance information
+        self._appearance = appearance
 
     def think(self, dt):
         """simulation event"""
@@ -30,4 +32,4 @@ class Projectile(Entity):
             self.die()
         # otherwise draw ourself
         else:
-            pygame.draw.rect(dest, (255, 255, 0), self._rect)
+            pygame.draw.rect(dest, self._appearance, self._rect)

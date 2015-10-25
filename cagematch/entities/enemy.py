@@ -7,7 +7,7 @@ import pygame
 class EnemyController(EntityContainer):
     """manages a collection of enemies' behaviour"""
 
-    def __init__(self, resolution, starting_speed, max_speed, advance_speed=2):
+    def __init__(self, resolution, starting_speed, max_speed, shoot_method, advance_speed=2):
         """constructor"""
         super().__init__()
         # decide the initial direction of enemies
@@ -16,6 +16,10 @@ class EnemyController(EntityContainer):
         self._current_speed = starting_speed
         self._max_speed = max_speed
         self._advance_speed = advance_speed
+        self._shoot_method = shoot_method
+        # number of bullets in the air from enemies
+        self._bullets_flying = 0
+        self._max_flying_bullets = 1
         # figure out the bounds of where enemies can move
         space_ratio = 0.05
         bound_x, bound_y = resolution[0] * space_ratio, resolution[1] * space_ratio
@@ -32,7 +36,8 @@ class EnemyController(EntityContainer):
             for x in range(columns):
                 spawn_x = start_x + x_spacing * x
                 spawn_y = start_y + y_spacing * y
-                self.add(Enemy((spawn_x, spawn_y)))
+                enemy = Enemy((spawn_x, spawn_y))
+                self.add(enemy)
 
     def add(self, entity):
         """override 'add entity to container' behaviour to set their movement/speed to match all enemies"""
@@ -45,21 +50,40 @@ class EnemyController(EntityContainer):
         # update all contained entities
         super().think(dt)
         if len(self._entities) > 0:
-            # decide whether the enemies need to change direction
-            turn_around = False
-            if self._current_direction == Enemy.LEFT:
-                left_most = self._find_leftmost()
-                if left_most < self._bounds.left:
-                    turn_around = True
-            elif self._current_direction == Enemy.RIGHT:
-                right_most = self._find_rightmost()
-                if right_most > self._bounds.right:
-                    turn_around = True
-            else:
-                print("invalid direction: {}".format(self._current_direction))
-            # if so, change direction
-            if turn_around:
-                self._change_direction()
+            self._check_for_direction_change()
+            self._attempt_shooting()
+
+    def _check_for_direction_change(self):
+        """checks to see if enemies need to change direction"""
+        # decide whether the enemies need to change direction
+        turn_around = False
+        if self._current_direction == Enemy.LEFT:
+            left_most = self._find_leftmost()
+            if left_most < self._bounds.left:
+                turn_around = True
+        elif self._current_direction == Enemy.RIGHT:
+            right_most = self._find_rightmost()
+            if right_most > self._bounds.right:
+                turn_around = True
+        else:
+            print("invalid direction: {}".format(self._current_direction))
+        # if so, change direction
+        if turn_around:
+            self._change_direction()
+
+    def _attempt_shooting(self):
+        """checks to see if any enemies should fire at the player"""
+        if self._bullets_flying < self._max_flying_bullets:
+            if random.random() <= 0.005:
+                firing = random.choice(self._entities)
+                bullet_origin = firing._rect.midbottom
+                self._bullets_flying += 1
+                self._shoot_method(bullet_origin, self._bullet_died)
+
+    def _bullet_died(self, bullet):
+        """callback called when a bullet from an enemy dies"""
+        _ = bullet
+        self._bullets_flying -= 1
 
     def _find_leftmost(self):
         """identifies which enemy is the furthest left, and returns the x position of their leading edge"""
@@ -118,11 +142,14 @@ class Enemy(Entity):
         """constructor"""
         super().__init__()
 
+        # default direction & speed
         self._direction = Enemy.LEFT
         self._speed = Enemy.DEFAULT_SPEED
 
         # figure out spawn position
         size = 64, 64
+        # store a floating point x position as well as rect, so we can manually implement
+        # smoother movement slower than 1 pixel per simulation update
         self._real_xpos = float(pos[0])
         self._rect = pygame.Rect(pos, size)
 
