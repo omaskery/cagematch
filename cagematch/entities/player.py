@@ -20,7 +20,7 @@ class Player(Entity):
         self._shoot_method = shoot_method
 
         # figure out spawn position
-        size = 32, 32
+        size = 64, 64
         start_x = (resolution[0] - size[0]) / 2
         start_y = resolution[1] - 2 * size[1]
         start_pos = start_x, start_y

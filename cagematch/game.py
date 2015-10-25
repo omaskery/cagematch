@@ -20,7 +20,7 @@ class Game(object):
         self._enemies = EnemyController(self._resolution, 1, 13)
         self._entities.add(Player(self._resolution, self._player_shoot))
         self._entities.add(self._enemies)
-        self._enemies.add(Enemy((400, 100)))
+        self._enemies.populate(4, 6, 96, 96)
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
