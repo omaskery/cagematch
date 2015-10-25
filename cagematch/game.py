@@ -1,6 +1,6 @@
 """this file implements the top level game object that pulls together the rest of the code into one game"""
 from .ticker import Ticker
-from .entities import EntityContainer, Player, Projectile, Enemy
+from .entities import EntityContainer, Player, Projectile, Enemy, EnemyController
 import pygame
 
 
@@ -17,8 +17,10 @@ class Game(object):
 
         # all game entities (players, enemies, ...)
         self._entities = EntityContainer()
+        self._enemies = EnemyController(self._resolution, 1, 13)
         self._entities.add(Player(self._resolution, self._player_shoot))
-        self._entities.add(Enemy((400, 100)))
+        self._entities.add(self._enemies)
+        self._enemies.add(Enemy((400, 100)))
 
         # configuration for the game's "tickers" (periodically recurring events)
         desired_fps = 60.0
@@ -100,7 +102,7 @@ class Game(object):
 
     def _player_shoot(self, bullet_origin, death_callback):
         """callback passed to the Player to enable them to fire projectiles"""
-        speed = 4
+        speed = 7
         projectile = Projectile(bullet_origin, (0, -speed))
         projectile.set_death_callback(death_callback)
         self._entities.add(projectile)
