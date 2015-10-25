@@ -152,7 +152,7 @@ class Game(object):
         self._player_bullets.add(projectile)
 
     def _enemy_shoot(self, bullet_origin, death_callback):
-        """callback passed to the Player to enable them to fire projectiles"""
+        """callback passed to the EnemyController to enable enemies to fire projectiles"""
         speed = 3
         projectile = Projectile(bullet_origin, (0, speed), (255, 255, 255))
         projectile.set_death_callback(death_callback)
