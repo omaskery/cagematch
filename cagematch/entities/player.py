@@ -23,8 +23,8 @@ class Player(Entity):
         size = 64, 64
         start_x = (resolution[0] - size[0]) / 2
         start_y = resolution[1] - 2 * size[1]
-        start_pos = start_x, start_y
-        self._rect = pygame.Rect(start_pos, size)
+        self._start_pos = start_x, start_y
+        self._rect = pygame.Rect(self._start_pos, size)
 
         # derive where we can move
         self._player_bounds = pygame.Rect(size[0], start_y, resolution[0] - size[0] * 2, size[1])
@@ -59,6 +59,10 @@ class Player(Entity):
             self._shoot_method(bullet_origin, self._bullet_died)
             # set when we can next shoot
             self._can_fire_after = datetime.datetime.now() + self._fire_period
+
+    def recenter(self):
+        """used to set the player back to the starting position"""
+        self._rect.topleft = self._start_pos
 
     def _bullet_died(self, bullet):
         """callback is fired when a fired bullet is deleted from game"""

@@ -44,7 +44,7 @@ class EntityContainer(Entity):
 
     def is_alive(self):
         """containers live forever unless die_on_empty is set, in which case when all entities are dead they die"""
-        result = True
+        result = self._alive
         if self._die_on_empty and self._alive:
             result = any([entity.is_alive() for entity in self._entities])
             if not result:
