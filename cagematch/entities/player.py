@@ -1,4 +1,7 @@
 """code pertaining to the playable entity in the game"""
+
+
+from ..spritesheet import Animation, AnimatedSpriteSheet
 from .entity import Entity
 import datetime
 import pygame
@@ -12,15 +15,21 @@ class Player(Entity):
     # fire rate means you can fire bullets up to a fixed rate
     FIRE_RATE = 1
 
-    def __init__(self, resolution, shoot_method):
+    def __init__(self, resolution, shoot_method, sprite):
         """constructor"""
         super().__init__()
 
+        size = 64, 64
+
         # store parameters
         self._shoot_method = shoot_method
+        self._sprite = AnimatedSpriteSheet(sprite, size)
+        self._sprite.add_animation("test", Animation([
+            0, 1
+        ], 4))
+        self._sprite.set_animation("test")
 
         # figure out spawn position
-        size = 64, 64
         start_x = (resolution[0] - size[0]) / 2
         start_y = resolution[1] - 2 * size[1]
         self._start_pos = start_x, start_y
@@ -40,7 +49,8 @@ class Player(Entity):
 
     def render(self, bounds, dest):
         """render event"""
-        pygame.draw.rect(dest, (255, 0, 0), self._rect)
+        self._sprite.draw(dest, self._rect.x, self._rect.y)
+        # pygame.draw.rect(dest, (255, 0, 0), self._rect)
 
     def think(self, dt):
         """simulation event"""

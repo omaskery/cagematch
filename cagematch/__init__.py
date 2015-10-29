@@ -8,6 +8,9 @@ def main():
     resolution = 1024, 768
     fullscreen = False
 
+    # where to find game assets
+    asset_path = "asset_packs/default.zip"
+
     # create a game object and call it's run method to run the game
-    Game(resolution, fullscreen).run()
+    Game(resolution, fullscreen, asset_path).run()
 

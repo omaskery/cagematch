@@ -1,6 +1,7 @@
 """this file implements the top level game object that pulls together the rest of the code into one game"""
 from .entities import EntityContainer, Player, Projectile, EnemyController
 from collections import namedtuple
+from .resources import Resources
 from .ticker import Ticker
 import pygame
 
@@ -11,13 +12,16 @@ DifficultySettings = namedtuple('DifficultySettings', 'speed max_speed advance_r
 class Game(object):
     """this is the top level game object, the game is operated from here"""
 
-    def __init__(self, resolution, fullscreen):
+    def __init__(self, resolution, fullscreen, asset_path):
         """constructor that initialises the game"""
         # store parameters
         self._resolution = resolution
         self._fullscreen = fullscreen
         # flag for whether game is still running (see run())
         self._running = False
+
+        self._resources = Resources(asset_path)
+        player_sprite = self._resources.get_image("player.png")
 
         self._default_difficulty = DifficultySettings(1, 8, 2)
 
@@ -37,7 +41,7 @@ class Game(object):
         # configure the first level
         self._start_level()
         # add player to game
-        self._player = Player(self._resolution, self._player_shoot)
+        self._player = Player(self._resolution, self._player_shoot, player_sprite)
         self._entities.add(self._player)
         # add enemy container to game
         self._entities.add(self._enemies)
