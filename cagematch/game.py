@@ -23,6 +23,8 @@ class Game(object):
         self._resources = Resources(asset_path)
         self._player_sprite = self._resources.get_image("player.png")
         self._enemy_sprite = self._resources.get_image("enemy.png")
+        self._player_bullet_sprite = self._resources.get_image("player_bullet.png")
+        self._enemy_bullet_sprite = self._resources.get_image("enemy_bullet.png")
 
         self._default_difficulty = DifficultySettings(1, 8, 2)
 
@@ -185,14 +187,14 @@ class Game(object):
     def _player_shoot(self, bullet_origin, death_callback):
         """callback passed to the Player to enable them to fire projectiles"""
         speed = 7
-        projectile = Projectile(bullet_origin, (0, -speed), (255, 255, 0))
+        projectile = Projectile(bullet_origin, (0, -speed), (255, 255, 0), self._player_bullet_sprite)
         projectile.set_death_callback(death_callback)
         self._player_bullets.add(projectile)
 
     def _enemy_shoot(self, bullet_origin, death_callback):
         """callback passed to the EnemyController to enable enemies to fire projectiles"""
         speed = 3
-        projectile = Projectile(bullet_origin, (0, speed), (255, 255, 255))
+        projectile = Projectile(bullet_origin, (0, speed), (255, 255, 255), self._enemy_bullet_sprite)
         projectile.set_death_callback(death_callback)
         self._enemy_bullets.add(projectile)
 
