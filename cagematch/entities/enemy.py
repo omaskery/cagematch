@@ -1,4 +1,5 @@
 """code pertaining to the playable entity in the game"""
+from ..spritesheet import AnimatedSpriteSheet, Animation
 from .entity import Entity, EntityContainer
 import random
 import pygame
@@ -27,7 +28,7 @@ class EnemyController(EntityContainer):
         bound_h = resolution[1] * (1.0 - 2.0 * space_ratio)
         self._bounds = pygame.Rect(bound_x, bound_y, bound_w, bound_h)
 
-    def populate(self, rows, columns, x_spacing, y_spacing):
+    def populate(self, rows, columns, x_spacing, y_spacing, sprite_sheet):
         """generate a collection of enemies given a number and spacing between them"""
         width = columns * x_spacing
         start_x = self._bounds.centerx - width / 2
@@ -36,7 +37,7 @@ class EnemyController(EntityContainer):
             for x in range(columns):
                 spawn_x = start_x + x_spacing * x
                 spawn_y = start_y + y_spacing * y
-                enemy = Enemy((spawn_x, spawn_y))
+                enemy = Enemy((spawn_x, spawn_y), sprite_sheet)
                 self.add(enemy)
 
     def add(self, entity):
@@ -138,7 +139,7 @@ class Enemy(Entity):
     # the default movement speed
     DEFAULT_SPEED = 1
 
-    def __init__(self, pos):
+    def __init__(self, pos, sprite_sheet):
         """constructor"""
         super().__init__()
 
@@ -152,6 +153,12 @@ class Enemy(Entity):
         # smoother movement slower than 1 pixel per simulation update
         self._real_xpos = float(pos[0])
         self._rect = pygame.Rect(pos, size)
+
+        self._sprite = AnimatedSpriteSheet(sprite_sheet, size)
+        self._sprite.add_animation("test", Animation([
+            0, 1
+        ], 4))
+        self._sprite.set_animation("test")
 
     @property
     def leading_edge(self):
@@ -172,7 +179,8 @@ class Enemy(Entity):
 
     def render(self, bounds, dest):
         """render event"""
-        pygame.draw.rect(dest, (0, 255, 0), self._rect)
+        self._sprite.draw(dest, self._rect.x, self._rect.y)
+        # pygame.draw.rect(dest, (0, 255, 0), self._rect)
 
     def think(self, dt):
         """simulation event"""

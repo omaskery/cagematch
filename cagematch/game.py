@@ -21,7 +21,8 @@ class Game(object):
         self._running = False
 
         self._resources = Resources(asset_path)
-        player_sprite = self._resources.get_image("player.png")
+        self._player_sprite = self._resources.get_image("player.png")
+        self._enemy_sprite = self._resources.get_image("enemy.png")
 
         self._default_difficulty = DifficultySettings(1, 8, 2)
 
@@ -41,7 +42,7 @@ class Game(object):
         # configure the first level
         self._start_level()
         # add player to game
-        self._player = Player(self._resolution, self._player_shoot, player_sprite)
+        self._player = Player(self._resolution, self._player_shoot, self._player_sprite)
         self._entities.add(self._player)
         # add enemy container to game
         self._entities.add(self._enemies)
@@ -117,7 +118,7 @@ class Game(object):
             self._enemy_shoot,
             advance_speed=self._current_difficulty.advance_rate
         )
-        self._enemies.populate(self._rows, self._columns, self._xspacing, self._yspacing)
+        self._enemies.populate(self._rows, self._columns, self._xspacing, self._yspacing, self._enemy_sprite)
         self._enemies.set_death_callback(self._next_level)
         self._current_difficulty = DifficultySettings(
             self._current_difficulty.speed + 0.5,
